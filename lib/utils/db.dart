@@ -22,7 +22,7 @@ abstract class DB {
     await db.execute('CREATE TABLE tarefas (id INTEGER PRIMARY KEY NOT NULL, '
         'tarefa STRING, completo BOOLEAN)');
   }
-  
+
   static Future<int> insert(String table, BaseModel model) async =>
       await _dbInstance.insert(table, model.toMap());
 
@@ -37,4 +37,6 @@ abstract class DB {
           String sql, List<dynamic> args) async =>
       await _dbInstance.rawQuery(sql, args);
 
+  static Future<List<Map<String, dynamic>>> queryAll(String table) async =>
+      await _dbInstance.query(table);
 }

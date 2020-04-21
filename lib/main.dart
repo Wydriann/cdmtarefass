@@ -32,26 +32,28 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  List<Tarefas> _tarefas = [];
+  List<dynamic> _tarefas = [];
 
   List<Widget> get _widgets =>
-      _tarefas.map((tarefa) =>
-       tarefaWidget(tarefa)).toList();
+      _tarefas.map((tarefa) => tarefaWidget(tarefa)).toList();
 
   Widget tarefaWidget(Tarefas tarefa) {
-    Padding(
-      padding: EdgeInsets.all(16),
-      child: FlatButton(
-        child: Row(
-          children: <Widget>[
-            Text(tarefa.tarefa),
-            Icon(tarefa.completo == true
-                ? Icons.radio_button_checked
-                : Icons.radio_button_unchecked,
-                )
-          ],
+    return ListTile(
+      title: Padding(
+        padding: EdgeInsets.all(16),
+        child: FlatButton(
+          child: Row(
+            children: <Widget>[
+              Text(tarefa.tarefa),
+              Icon(
+                tarefa.completo == true
+                    ? Icons.radio_button_checked
+                    : Icons.radio_button_unchecked,
+              )
+            ],
+          ),
+          onPressed: null,
         ),
-        onPressed: null,
       ),
     );
   }
@@ -119,5 +121,18 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() => _tarefa = '');
 
     Navigator.of(context).pop();
+  }
+
+  void atualizarTarefas() async {
+    List<Map<String, dynamic>> tarefas = await DB.queryAll(Tarefas.tableName);
+
+    _tarefas = tarefas.map((tarefa) => Tarefas.fromMap(tarefa)).toList();
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    atualizarTarefas();
+    super.initState();
   }
 }
