@@ -39,100 +39,128 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget tarefaWidget(Tarefas tarefa) {
     return ListTile(
-      title: Padding(
-        padding: EdgeInsets.all(16),
-        child: FlatButton(
-          child: Row(
-            children: <Widget>[
-              Text(tarefa.tarefa),
-              Icon(
-                tarefa.completo == true
-                    ? Icons.radio_button_checked
-                    : Icons.radio_button_unchecked,
-              )
-            ],
-          ),
-          onPressed: null,
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: ListView(
-          children: _widgets,
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.add_circle_outline),
-        onPressed: () {
-          _addTarefa(context);
-        },
-      ),
-    );
-  }
-
-  String _tarefa;
-
-  void _addTarefa(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text("Adicionar Trefa"),
-          actions: <Widget>[
-            FlatButton(
-              onPressed: () => _salvarTrefa(),
-              child: Text("Incluir"),
+      title: Dismissible(
+              child: Padding(
+          padding: EdgeInsets.all(16),
+          child: FlatButton(
+            child: Row(
+              children: <Widget>[
+                Text(tarefa.tarefa),
+                Icon(
+                  tarefa.completo == true
+                      ? Icons.radio_button_checked
+                      : Icons.radio_button_unchecked,
+                )
+              ],
             ),
-            FlatButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text("Cancelar"),
-            ),
-          ],
-          content: TextField(
-            autofocus: true,
-            decoration: InputDecoration(
-              labelText: "Descrição da tarefa",
-              hintText: "ex: Jogar lolzin",
-            ),
-            onChanged: (valor) {
-              _tarefa = valor;
-            },
-          ),
-        );
-      },
-    );
-  }
+            onPressed: () => _tarefaConcluida(tarefa),
+                      ),
+                    ),
+                    key: Key(tarefa.id.toString()),
+                    onDismissed: (DismissDirection direction) => _delete(tarefa),
+                          ),
+                        );
+                      }
+                    
+                      @override
+                      Widget build(BuildContext context) {
+                        return Scaffold(
+                          appBar: AppBar(
+                            title: Text(widget.title),
+                          ),
+                          body: Center(
+                            child: ListView(
+                              children: _widgets,
+                            ),
+                          ),
+                          floatingActionButton: FloatingActionButton(
+                            child: Icon(Icons.add_circle_outline),
+                            onPressed: () {
+                              _addTarefa(context);
+                            },
+                          ),
+                        );
+                      }
+                    
+                      String _tarefa;
+                    
+                      void _addTarefa(BuildContext context) {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: Text("Adicionar Trefa"),
+                              actions: <Widget>[
+                                FlatButton(
+                                  onPressed: () => _salvarTrefa(),
+                                  child: Text("Incluir"),
+                                ),
+                                FlatButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: Text("Cancelar"),
+                                ),
+                              ],
+                              content: TextField(
+                                autofocus: true,
+                                decoration: InputDecoration(
+                                  labelText: "Descrição da tarefa",
+                                  hintText: "ex: Jogar lolzin",
+                                ),
+                                onChanged: (valor) {
+                                  _tarefa = valor;
+                                },
+                              ),
+                            );
+                          },
+                        );
+                      }
+                    
+                      _salvarTrefa() async {
+                        Tarefas tarefa = Tarefas(
+                          tarefa: _tarefa,
+                          completo: false,
+                        );
+                    
+                        await DB.insert(Tarefas.tableName, tarefa);
+                        setState(() => _tarefa = '');
+            
+                        atualizarTarefas();
+                    
+            
+            
+                        Navigator.of(context).pop();
+                      }
+                    
+                      void atualizarTarefas() async {
+                        List<Map<String, dynamic>> tarefas = await DB.queryAll(Tarefas.tableName);
+                    
+                        _tarefas = tarefas.map((tarefa) => Tarefas.fromMap(tarefa)).toList();
+                        setState(() {});
+                      }
+                    
+                      @override
+                      void initState() {
+                        atualizarTarefas();
+                        super.initState();
+                      }
+                    
+                      _delete(Tarefas tarefa) async {
+                        await DB.delete(Tarefas.tableName, tarefa);
+            
+                        atualizarTarefas();
+            
+            
+                      }
+            
+              _tarefaConcluida(tarefa) async {
+                tarefa.completo = !tarefa.completo;
+               dynamic totalRemovido = await DB.update(Tarefas.tableName, tarefa);
+                atualizarTarefas();
 
-  _salvarTrefa() async {
-    Tarefas tarefa = Tarefas(
-      tarefa: _tarefa,
-      completo: false,
-    );
+                print(totalRemovido);
+                atualizarTarefas();
+                
 
-    await DB.insert(Tarefas.tableName, tarefa);
-    setState(() => _tarefa = '');
 
-    Navigator.of(context).pop();
-  }
-
-  void atualizarTarefas() async {
-    List<Map<String, dynamic>> tarefas = await DB.queryAll(Tarefas.tableName);
-
-    _tarefas = tarefas.map((tarefa) => Tarefas.fromMap(tarefa)).toList();
-    setState(() {});
-  }
-
-  @override
-  void initState() {
-    atualizarTarefas();
-    super.initState();
-  }
+              }
 }
